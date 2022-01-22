@@ -477,6 +477,8 @@ static PF_Err Render(
 
 	PF_EffectWorld* input = &params[0]->u.ld;
 
+	ERR(PF_COPY(input, output, NULL, NULL));
+
 	PF_ParamDef param;
 	AEFX_CLR_STRUCT(param);
 
@@ -489,45 +491,44 @@ static PF_Err Render(
 		&param
 	);
 
-	//in_data->extent_hint.left
+	if (param.u.ld.data != nullptr) {
+		PF_LayerDef* layers[SCALD_NUM_PARAMS];
+		layers[SCALD_LAYER_ID] = &param.u.ld;
+		//DEBUG_LOGGER("[Layer] w:%d h:%d\n", param.u.ld.width, param.u.ld.height);
 
-	PF_LayerDef* layers[SCALD_NUM_PARAMS];
-	layers[SCALD_LAYER_ID] = &param.u.ld;
-	//DEBUG_LOGGER("[Layer] w:%d h:%d\n", param.u.ld.width, param.u.ld.height);
+		SourceData_t sdata = {
+			&input->width,
+			&input->height,
+			&output->width,
+			&output->height,
+			in_data->current_time / in_data->local_time_step,
+			static_cast<int>((double)in_data->width / (double)input->width + 0.5)
+		};
 
-	SourceData_t sdata = {
-		&input->width,
-		&input->height,
-		&output->width,
-		&output->height,
-		in_data->current_time / in_data->local_time_step,
-		static_cast<int>((double)in_data->width / (double)input->width + 0.5)
-	};
+		DataParams_t d_params = {
+			in_data,
+			out_data,
+			params,
+			output,
+			input,
+			&err,
+			layers,
+			&sdata
+		};
 
-	DataParams_t d_params = {
-		in_data,
-		out_data,
-		params,
-		output,
-		input,
-		&err,
-		layers,
-		&sdata
-	};
+		//DEBUG_LOGGER("world deep:%d\n", PF_WORLD_IS_DEEP(output));
 
-	ERR(PF_COPY(input, output, NULL, NULL));
-
-	//DEBUG_LOGGER("world deep:%d\n", PF_WORLD_IS_DEEP(output));
-
-	if (PF_WORLD_IS_DEEP(output)) {
-		try {
-			FxFunc16(&d_params);
+		if (PF_WORLD_IS_DEEP(output)) {
+			try {
+				FxFunc16(&d_params);
+			}
+			catch (...) {
+				FxFunc8(&d_params);
+			}
 		}
-		catch (...) {
-			FxFunc8(&d_params);
-		}
-	} else {
+		else {
 
+		}
 	}
 
 	ERR2(PF_CHECKIN_PARAM(in_data, &param));
