@@ -519,15 +519,10 @@ static PF_Err Render(
 		//DEBUG_LOGGER("world deep:%d\n", PF_WORLD_IS_DEEP(output));
 
 		if (PF_WORLD_IS_DEEP(output)) {
-			try {
-				FxFunc16(&d_params);
-			}
-			catch (...) {
-				FxFunc8(&d_params);
-			}
+			FxFunc16(&d_params);
 		}
 		else {
-
+			FxFunc8(&d_params);
 		}
 	}
 
